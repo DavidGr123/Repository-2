@@ -1,7 +1,8 @@
 ## Exercise 1: Performance Analysis of Portfolios
 
 Create (using four of the ten stocks) multiple portfolios using `tq_portfolio()`:
-  
+library(tidyquant)
+library(tidyverse)  
   *  an equally weighted one, 
 *  a market-value weighted one, and 
 *  one where you create a trading strategy according to [https://www.datacamp.com/community/tutorials/r-trading-tutorial](https://www.datacamp.com/community/tutorials/r-trading-tutorial) - use the tools in the tidyquant package!! Trade your four stocks in a way that Portfolios weights (in sum) do never exceed +-1.
@@ -21,15 +22,15 @@ BA <- tq_get("BA", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17"
 FB <- tq_get("FB", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17")
 NVDA <- tq_get("NVDA", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17")
 AMGN <- tq_get("AMGN", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17")
-TSLA <- tq_get("TSLA", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17")
+GOS <- tq_get("GOS", get = "stock.prices", from =  "2000-01-01", to = "2019-09-17")
 
 #select four stocks
-#I choose CSCO, BA, NVDA, TSLA because I like the companies
+# CSCO, BA, NVDA, GOS
 ```
 
 ```{r Getting returns from the four stocks}
 #we got all returns for the stocks in one tibble and renamed the column return 
-monthly_returns_stocks <- c("CSCO", "BA", "NVDA", "TSLA") %>%
+monthly_returns_stocks <- c("CSCO", "BA", "NVDA", "GOS") %>%
   tq_get(get = "stock.prices", from = "2000-01-01", to = "2019-09-17") %>%
   group_by(symbol)%>%
   tq_transmute(adjusted, periodReturn, period = "monthly", col_rename =  "Ra")
@@ -54,7 +55,7 @@ mult_monthly_returns_stocks
 #first portfolio is equally weight
 #that is why we choose 25% for each
 
-stock_returns_monthly <- c("CSCO", "BA", "NVDA","TSLA") %>%
+stock_returns_monthly <- c("CSCO", "BA", "NVDA","GOS") %>%
   tq_get(get  = "stock.prices",
          from = "2000-01-01",
          to   = "2019-09-17") %>%
@@ -86,7 +87,7 @@ weights <- c(0.25, 0.25, 0.25, 0.25,
              0.25, 0.25, 0.25, 0.25,
              0.25, 0.25, 0.25, 0.25)
 
-stocks <- c("CSCO", "BA", "NVDA","TSLA")
+stocks <- c("CSCO", "BA", "NVDA","GOS")
 weights_table <-  tibble(stocks) %>%
   tq_repeat_df(n = 3) %>%
   bind_cols(tibble(weights)) %>%
@@ -121,7 +122,7 @@ library(TTR)
 library(lubridate)
 
 #https://finance.yahoo.com/quote/BA?p=BA&.tsrc=fin-srch&guccounter=1
-#marketcaps: CSCO=212.095B;TSLA=83.434B;NVDA=109.748B;BA=94.87B
+#marketcaps: CSCO=212.095B;GOS=83.434B;NVDA=109.748B;BA=94.87B
 marketcaps <- c(212.095, 83.434, 109.748, 94.87)
 #compute the weights
 weights <- marketcaps /sum(marketcaps)
@@ -132,7 +133,7 @@ weights
 ```
 ```{r market value weighted portfolio}
 #CSCO = 42,41%
-#TSLA = 16,68%
+#GOS = 16,68%
 #NVDA= 21,94%
 #BA = 18,97%
 
@@ -149,12 +150,12 @@ library(lubridate)
 #we produce moving averages because we need them for our "trend following" trading strategy to compare it
 
 sma_CSCO <- SMA(CSCO[, "close"], n=50)
-sma_TSLA <- SMA(TSLA[, "close"], n=50)
+sma_GOS <- SMA(GOS[, "close"], n=50)
 sma_NVDA <- SMA(NVDA[, "close"], n=50)
 sma_BA <- SMA(BA[, "close"], n=50)
 
 sma_CSCO_200 <- SMA(CSCO[, "close"], n=200)
-sma_TSLA_200 <- SMA(TSLA[, "close"], n=200)
+sma_GOS_200 <- SMA(GOS[, "close"], n=200)
 sma_NVDA_200 <- SMA(NVDA[, "close"], n=200)
 sma_BA_200 <- SMA(BA[, "close"], n=200)
 
@@ -172,12 +173,12 @@ CSCO_dates
 data.frame_CSCO <- data.frame(CSCO_dates, sma_CSCO_200, sma_CSCO)
 data.frame_CSCO
 
-#create a TSLA dataframe with the important data
-TSLA_dates <- select(TSLA, date)
-TSLA_dates
+#create a GOS dataframe with the important data
+GOS_dates <- select(GOS, date)
+GOS_dates
 
-data.frame_TSLA <- data.frame(TSLA_dates, sma_TSLA_200, sma_TSLA)
-data.frame_TSLA
+data.frame_GOS <- data.frame(GOS_dates, sma_GOS_200, sma_GOS)
+data.frame_GOS
 
 #create a BA dataframe with the important data
 BA_dates <- select(BA, date)
@@ -199,8 +200,8 @@ data.frame_NVDA
 data.frame_CSCO['CSCO'] <- 0
 data.frame_CSCO$CSCO[data.frame_CSCO$sma_CSCO > data.frame_CSCO$sma_CSCO_200] = 1  
 
-data.frame_TSLA['TSLA'] <- 0
-data.frame_TSLA$TSLA[data.frame_TSLA$sma_TSLA > data.frame_TSLA$sma_TSLA_200] = 1  
+data.frame_GOS['GOS'] <- 0
+data.frame_GOS$GOS[data.frame_GOS$sma_GOS > data.frame_GOS$sma_GOS_200] = 1  
 
 data.frame_BA['BA'] <- 0
 data.frame_BA$BA[data.frame_BA$sma_BA > data.frame_BA$sma_BA_200] = 1  
@@ -217,12 +218,12 @@ nrow(data.frame_CSCO)
 #calculate weight for CSCO
 WEIGHT_CSCO <- colSums(V_01, na.rm = TRUE)/nrow(data.frame_CSCO)*100
 
-V_02 <- select(data.frame_TSLA, TSLA)
+V_02 <- select(data.frame_GOS, GOS)
 colSums(V_02, na.rm = TRUE)
 
-nrow(data.frame_TSLA)
-#calculate weight for TSLA
-WEIGHT_TSLA <- colSums(V_02, na.rm = TRUE)/nrow(data.frame_TSLA)*100
+nrow(data.frame_GOS)
+#calculate weight for GOS
+WEIGHT_GOS <- colSums(V_02, na.rm = TRUE)/nrow(data.frame_GOS)*100
 
 #calcuation for BA
 V_03 <- select(data.frame_BA, BA)
@@ -242,15 +243,15 @@ WEIGHT_NVDA <- colSums(V_04, na.rm = TRUE)/nrow(data.frame_NVDA)*100
 ```
 ```{r} 
 #weight calculation 
-all_weights <- sum(WEIGHT_CSCO, WEIGHT_TSLA, WEIGHT_NVDA, WEIGHT_BA)
+all_weights <- sum(WEIGHT_CSCO, WEIGHT_GOS, WEIGHT_NVDA, WEIGHT_BA)
 
 final_weight_CSCO <- WEIGHT_CSCO/all_weights
-final_weight_TSLA <- WEIGHT_TSLA/all_weights
+final_weight_GOS <- WEIGHT_GOS/all_weights
 final_weight_NVDA <- WEIGHT_NVDA/all_weights
 final_weight_BA <- WEIGHT_BA/all_weights
 
 
-all_weights_tb <- tibble(final_weight_CSCO, final_weight_TSLA, final_weight_BA, final_weight_NVDA)
+all_weights_tb <- tibble(final_weight_CSCO, final_weight_GOS, final_weight_BA, final_weight_NVDA)
 
 rowSums(all_weights_tb)
 ```
@@ -264,9 +265,9 @@ library(lubridate)
 #create new table of weights
 weights_portfolio <- c(0.25, 0.25, 0.25, 0.25,
                        weights[1], weights[2], weights[3], weights[4],
-                       final_weight_CSCO, final_weight_TSLA, final_weight_BA, final_weight_NVDA)
+                       final_weight_CSCO, final_weight_GOS, final_weight_BA, final_weight_NVDA)
 
-stocks <- c("CSCO", "TSLA", "NVDA", "BA")
+stocks <- c("CSCO", "GOS", "NVDA", "BA")
 
 weights_table <- tibble(stocks)%>%
   tq_repeat_df(n = 3) %>%
@@ -306,4 +307,60 @@ multiple_portfolio %>%
 multiple_portfolio %>%
   tq_performance(Ra = Ra, Rb = Rb, performance_fun = SharpeRatio)
 #the higher the Sharpe Ratio the better
-```
+
+### Task 2
+##Calculation MU - 
+x<-MSFT
+             
+dailyReturn(x, subset=NULL, type = Arith,
+            leading=TRUE)
+msft_return <- monthlyReturn(MSFT$close)
+msft_return
+allReturns(MSFT)
+require(quantmod)
+mean(stock_returns_monthly)
+mean(MSFT$close)
+sd(MSFT$close)
+mean(CSCO$close)
+sd(CSCO$close)
+mean(AMZN$close)
+sd(AMZN$close)
+mean(NVDA$close)
+sd(NVDA$close)
+
+a <- c(MSFT$close,CSCO$close,AMZN$close,NVDA$close)
+
+plot(a,)
+mu sigma diagramm
+require(dlogitnorm)
+x <- seq(0,1, length.out=81) 
+d <- dlogitnorm(x, mu=theta[1,"mu"], sigma=theta[1,"sigma"])
+plot(d~x,type="l")
+
+##Power of tsibble
+require(tsibble)
+gganimate(MSFT$close)
+
+
+##Formeln Angabe Grafik
+pacman::p_load(gganimate,gifski,png,gapminder)
+p <- ggplot(
+  gapminder,
+  aes(x = gdpPercap, y=lifeExp, size = pop, colour = country)
+) +
+  geom_point(show.legend = FALSE, alpha = 0.7) +
+  scale_color_viridis_d() +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  labs(x = "GDP per capita", y = "Life expectancy")
+p
+p + transition_time(year) +
+  labs(title = "Year: {frame_time}")
+
+
+##Task 3
+
+FC <- tq_get("ZACKS/FC", get = "quandl.datatable")
+FC %>%
+    slice(1:3) %>%
+    knitr::kable()
